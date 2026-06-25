@@ -1,0 +1,40 @@
+name: 主動式ETF每日持股追蹤
+
+on:
+  schedule:
+    # 每週一到五，UTC 11:00 = 台灣時間晚上19:00
+    # 投信通常在當天淨值結算後才公布持股，太早跑可能還抓到舊資料
+    - cron: "0 11 * * 1-5"
+  workflow_dispatch: {}   # 讓你可以在GitHub網頁上手動點「Run workflow」測試
+
+permissions:
+  contents: write   # 需要這個權限才能把快照資料commit回repo
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: 執行追蹤並發送通知
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python track_active_etf.py
+
+      - name: 把最新持股快照存回repo（供下次比對）
+        run: |
+          git config user.name "etf-tracker-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/
+          git diff --quiet --cached || git commit -m "更新ETF持股快照 $(date +'%Y-%m-%d')"
+          git push
