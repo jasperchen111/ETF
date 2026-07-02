@@ -41,7 +41,7 @@ HEADERS = {
 
 def fetch_holdings(etf_code: str):
     """抓取單一ETF的前10大持股，回傳 (資料日期字串, {股票代號: {"name":..,"shares":..}})"""
-    url = f"https://www.moneydj.com/ETF/X/Basic/Basic0007.xdjhtm?etfid={etf_code}.TW"
+    url = f"https://www.moneydj.com/ETF/X/Basic/Basic0007B.xdjhtm?etfid={etf_code}.TW"
     resp = requests.get(url, headers=HEADERS, timeout=20)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.content, "html.parser")
